@@ -1,0 +1,31 @@
+CREATE DATABASE ApontamentoHoras
+
+
+USE ApontamentoHoras
+
+CREATE TABLE usuario
+(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(500),
+    password VARCHAR(500),
+    dtCreation DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE Apontamento
+(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    dtApontamento DATETIME,
+    id_usuario INT,
+    CONSTRAINT fk_usuario
+        FOREIGN KEY (id_usuario) 
+        REFERENCES usuario(id)
+
+);
+
+
+
+
+
+
+
