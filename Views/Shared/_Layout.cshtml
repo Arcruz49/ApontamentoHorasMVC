@@ -7,41 +7,61 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ApontamentoHoras.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
 </head>
 <body>
-    <aside id="sidebar" class="sidebar w-64 flex flex-col justify-between py-6 px-5 fixed md:static inset-y-0 left-0 z-50">
+    <aside id="sidebar" class="sidebar glass w-64 flex flex-col justify-between py-6 px-5 fixed md:static inset-y-0 left-0 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
         <div>
-        <div class="flex items-center justify-between md:justify-start gap-3 mb-8">
-            <div class="flex items-center gap-3">
-            <img src="https://i.pravatar.cc/50" class="rounded-full" alt="foto perfil">
-            <div class="hidden md:block">
-                <p class="font-semibold text-white">Arthur Cruz</p>
-                <p class="text-sm text-gray-400">Desenvolvedor</p>
+            <div class="flex items-center justify-between md:justify-start gap-3 mb-8">
+                <div class="flex items-center gap-3">
+                    <img src="https://i.pravatar.cc/50" class="rounded-full border-2 border-violet-500" alt="foto perfil">
+                    <div class="hidden md:block">
+                        <p class="font-semibold text-white">Arthur Cruz</p>
+                        <p class="text-sm text-gray-400">Desenvolvedor</p>
+                    </div>
+                </div>
+                <button id="closeSidebar" class="md:hidden text-gray-400 hover:text-white">
+                    <i data-lucide="x"></i>
+                </button>
             </div>
-            </div>
-            <button id="closeSidebar" class="md:hidden text-gray-400 hover:text-white">
-            <i data-lucide="x"></i>
+
+            <button class="w-full bg-gradient-to-r from-violet-600 to-indigo-500 text-white py-3 rounded-2xl font-medium mb-8 shadow-lg hover:scale-105 transform transition-all duration-200">
+                <i data-lucide="clock" class="inline w-4 h-4 mr-2"></i> Marcar Ponto
             </button>
-        </div>
 
-        <button class="w-full bg-gradient-to-r from-violet-600 to-indigo-500 text-white py-2.5 rounded-xl font-medium mb-8 hover:opacity-90 transition">
-            <i data-lucide="clock" class="inline w-4 h-4 mr-2"></i> Marcar Ponto
-        </button>
-
-        <nav class="flex flex-col gap-3 text-gray-400">
-            <a href="#" class="flex items-center gap-3 hover:text-white transition"><i data-lucide="home"></i> Início</a>
-            <a href="#" class="flex items-center gap-3 hover:text-white transition"><i data-lucide="bell"></i> Lembretes</a>
-            <a href="#" class="flex items-center gap-3 hover:text-white transition"><i data-lucide="message-square"></i> Comunicados</a>
-            <a href="#" class="flex items-center gap-3 hover:text-white transition"><i data-lucide="calendar"></i> Reuniões</a>
-            <a href="#" class="flex items-center gap-3 hover:text-white transition"><i data-lucide="file-text"></i> Histórico</a>
-        </nav>
+            <nav class="flex flex-col gap-3 text-gray-400">
+                <a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-700/20 hover:text-white transition">
+                    <i data-lucide="home"></i> Início
+                </a>
+                <a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-700/20 hover:text-white transition">
+                    <i data-lucide="bell"></i> Lembretes
+                </a>
+                <a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-700/20 hover:text-white transition">
+                    <i data-lucide="message-square"></i> Comunicados
+                </a>
+                <a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-700/20 hover:text-white transition">
+                    <i data-lucide="calendar"></i> Reuniões
+                </a>
+                <a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-700/20 hover:text-white transition">
+                    <i data-lucide="file-text"></i> Histórico
+                </a>
+            </nav>
         </div>
 
         <div class="flex flex-col gap-2 mt-6">
-        <button class="flex items-center gap-2 text-gray-500 hover:text-white transition"><i data-lucide="moon"></i> Modo claro</button>
-        <button class="flex items-center gap-2 text-gray-500 hover:text-white transition"><i data-lucide="log-out"></i> Sair</button>
+            <button class="flex items-center gap-2 text-gray-400 hover:text-white transition hover:scale-105 transform">
+                <i data-lucide="moon"></i> Modo claro
+            </button>
+            <a href="/Usuario/Logout" class="flex items-center gap-2 text-gray-400 hover:text-white transition hover:scale-105 transform no-underline">
+                <i data-lucide="log-out"></i> Sair
+            </a>
         </div>
-  </aside>
+    </aside>
+
 
     <div class="container">
         <main role="main" class="pb-3">
@@ -53,6 +73,8 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

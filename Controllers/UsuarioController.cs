@@ -45,7 +45,6 @@ public class UsuarioController : Controller
             if (usuario == null)
                 return Json(new { success = false, message = "Usuário não encontrado" });
 
-            // Verifica o hash da senha
             var passwordHasher = new PasswordHasher<Usuario>();
             var result = passwordHasher.VerifyHashedPassword(usuario, usuario.password, password);
 
@@ -63,11 +62,10 @@ public class UsuarioController : Controller
 
             var authProperties = new AuthenticationProperties
             {
-                IsPersistent = true, // persistente após fechar o navegador
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(12)
             };
 
-            // Efetiva o login
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
@@ -80,6 +78,13 @@ public class UsuarioController : Controller
         {
             return Json(new { success = false, message = util.ErrorMessage(ex) });
         }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Login");
     }
 
     [HttpGet]

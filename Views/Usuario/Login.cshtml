@@ -11,6 +11,8 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans flex items-center justify-center min-h-screen">
 
@@ -49,13 +51,12 @@
             <p>Esqueceu sua senha? <a href="#" class="text-purple-500 hover:underline">Clique aqui</a></p>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
     <script>
-        // Inicializa os ícones do Lucide
 
         $(document).ready(function() {
-
-            // Mostrar / esconder senha
+            var notyf = new Notyf();
             $("#togglePassword").click(function() {
                 const passwordInput = $("#password");
                 const type = passwordInput.attr("type") === "password" ? "text" : "password";
@@ -63,23 +64,19 @@
                 $(this).text(type === "password" ? "👁" : "🙈");
             });
 
-            // Login via AJAX
             $("#btnLogin").click(function() {
                 const user = $("#username").val();
                 const pass = $("#password").val();
 
-                console.log("Tentando login", user, pass); // DEBUG
-
                 $.ajax({
                     url: "/Usuario/Login",
                     type: "POST",
-                    data: { username: user, password: pass }, // ou use JSON + [FromBody]
+                    data: { username: user, password: pass }, 
                     success: function(response) {
                         if(response.success) {
-                            alert("Login realizado com sucesso!");
-                            window.location.href = "/Menu/Index";
+                            window.location.href = "/Menu";
                         } else {
-                            alert(response.message || "Usuário ou senha inválidos.");
+                            notyf.error(response.message);
                         }
                     },
                     error: function(xhr, status, error) {

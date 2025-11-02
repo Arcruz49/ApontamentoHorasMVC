@@ -14,13 +14,12 @@ builder.Services.AddDbContext<Context>(options =>
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Usuario/Login"; // página de login
+        options.LoginPath = "/Usuario/Login";
         options.LogoutPath = "/Usuario/Logout";
-        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.ExpireTimeSpan = TimeSpan.FromHours(12);
         options.SlidingExpiration = true;
     });
 
-// Adiciona controllers com views
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
