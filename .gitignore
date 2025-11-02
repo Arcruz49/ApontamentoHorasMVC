@@ -1,0 +1,16 @@
+appsettings.json
+appsettings.Development.json
+secrets.json
+
+bin/
+obj/
+
+.vs/
+.idea/
+*.user
+*.suo
+
+*.log
+
+node_modules/
+dist/

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marq | Dashboard Responsivo</title>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at 20% 20%, #1e1f25, #15161a 80%);
+      font-family: 'Inter', sans-serif;
+      color: #e4e4e7;
+    }
+    .card {
+      background: linear-gradient(145deg, #1f2025, #292a30);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+    }
+    .sidebar {
+      background: linear-gradient(180deg, #202127, #18191d);
+      border-right: 1px solid rgba(255,255,255,0.05);
+      transition: transform 0.3s ease-in-out;
+    }
+    .sidebar.hidden-mobile {
+      transform: translateX(-100%);
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+    }
+    .scroll-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .scroll-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+
+    .scroll-container::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #22c55e, #16a34a);
+        border-radius: 10px;
+        transition: background 0.3s;
+    }
+
+    .scroll-container::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #4ade80, #22c55e);
+    }
+
+    /* Firefox */
+    .scroll-container {
+        scrollbar-width: thin;
+        scrollbar-color: #22c55e rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  
+  <!-- Main -->
+  <main class="flex-1 overflow-y-auto p-6 md:p-8 ml-0 md:ml-0 transition-all duration-300">
+    
+    <!-- Topbar Mobile -->
+    <div class="flex items-center justify-between mb-6 md:hidden">
+      <button id="openSidebar" class="text-gray-300 hover:text-white">
+        <i data-lucide="menu"></i>
+      </button>
+      <h1 class="text-xl font-semibold text-white">Painel de Ponto</h1>
+      <img src="https://i.pravatar.cc/40" class="rounded-full" />
+    </div>
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-3">
+      <div>
+        <h1 class="text-2xl font-semibold text-white">Painel de Ponto</h1>
+        <p class="text-sm text-gray-400">Acompanhe seu tempo de trabalho e saldo de horas</p>
+      </div>
+      <div class="glass rounded-full px-4 py-2 flex items-center justify-between gap-2 text-gray-300 text-sm">
+        <span>Como você está se sentindo?</span>
+        <span class="text-lg">😓 😕 😐 🙂 😄</span>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- Card Hora -->
+      <div class="card p-6">
+        <p class="text-gray-400 text-sm mb-1" id="diaSemana"></p>
+        <h2 class="text-3xl font-bold text-white mb-1" id="dataAtual"></h2>
+        <p class="text-gray-400 text-sm">Hora atual</p>
+        <h3 class="text-4xl font-bold mb-4 text-violet-400" id="horaAtual"></h3>
+
+        <div class="bg-violet-600/30 text-center rounded-md py-2 text-sm mb-4 border border-violet-600/40">
+          Último ponto registrado: <span class="font-semibold text-white">31/10/2025 12:10</span>
+        </div>
+
+        <p class="text-gray-400 text-sm mb-1">Horas faltantes</p>
+        <h3 class="text-3xl font-bold mb-2 text-white" id="tempoRestante">00:24:02</h3>
+        <div class="w-full bg-gray-700 rounded-full h-2 mb-3 overflow-hidden">
+          <div class="bg-gradient-to-r from-violet-500 to-indigo-500 h-2 rounded-full animate-pulse" id="barraProgresso" style="width: 65%;"></div>
+        </div>
+        <p class="text-sm text-gray-400">Trabalhando...</p>
+      </div>
+
+      <!-- Últimos 10 dias -->
+      <div class="card p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-semibold text-lg">Últimos 10 dias</h3>
+          <a href="#" class="text-sm text-violet-400 hover:underline">Ver histórico</a>
+        </div>
+        <div class="scroll-container overflow-y-auto max-h-96">
+            <table class="w-full text-sm border-separate border-spacing-y-2">
+                <thead class="hidden md:table-header-group">
+                <tr class="text-gray-400 text-left border-b border-gray-700">
+                    <th>Data</th><th>Trabalhado</th><th>Saldo</th><th>Status</th>
+                </tr>
+                </thead>
+                <tbody id="tabelaDias"></tbody>
+            </table>
+        </div>
+      </div>
+
+      <!-- Comunicados -->
+      <div class="card p-6 flex flex-col items-center justify-center text-gray-400 text-center">
+        <i data-lucide="file-text" class="w-12 h-12 mb-3 text-gray-500"></i>
+        <p class="text-sm">Nenhum comunicado</p>
+      </div>
+    </div>
+
+    <!-- Cards inferiores -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <div class="card flex justify-between items-center p-6">
+        <div>
+          <p class="text-gray-400 text-sm">Saldo de horas</p>
+          <h2 class="text-3xl font-bold text-green-400">+91:27</h2>
+        </div>
+        <p class="text-xs text-gray-500">Desde 11/01/2024</p>
+      </div>
+
+      <div class="card p-6">
+        <p class="text-yellow-400 font-semibold mb-1">Ocorrências</p>
+        <p class="text-gray-400 text-sm">Solicite os ajustes necessários para resolver as suas ocorrências.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    const diasSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+
+    function atualizarHora() {
+      const agora = new Date();
+      $('#horaAtual').text(agora.toLocaleTimeString('pt-BR'));
+      $('#dataAtual').text(agora.toLocaleDateString('pt-BR'));
+      $('#diaSemana').text(diasSemana[agora.getDay()]);
+    }
+
+    function preencherTabela() {
+      const dias = [
+        ['30/10/2025', '04:44', '-0:15', 'Ocorrência', 'yellow'],
+        ['29/10/2025', '09:30', '+01:30', 'Concluído', 'green'],
+        ['28/10/2025', '07:57', '+00:00', 'Concluído', 'green'],
+        ['27/10/2025', '08:28', '+00:28', 'Aprovado', 'green'],
+        ['26/10/2025', '00:00', '+00:00', 'Concluído', 'green'],
+        ['25/10/2025', '00:00', '+00:00', 'Concluído', 'green'],
+        ['24/10/2025', '08:25', '+00:25', 'Concluído', 'green'],
+        ['23/10/2025', '08:05', '+00:00', 'Aprovado', 'green'],
+        ['22/10/2025', '07:58', '+00:00', 'Concluído', 'green'],
+        ['21/10/2025', '08:01', '+00:00', 'Concluído', 'green'],
+        ['25/10/2025', '00:00', '+00:00', 'Concluído', 'green'],
+        ['24/10/2025', '08:25', '+00:25', 'Concluído', 'green'],
+        ['23/10/2025', '08:05', '+00:00', 'Aprovado', 'green'],
+        ['22/10/2025', '07:58', '+00:00', 'Concluído', 'green'],
+        ['21/10/2025', '08:01', '+00:00', 'Concluído', 'green']
+      ];
+      dias.forEach(d => {
+        $('#tabelaDias').append(`
+          <tr class="border-b border-gray-800 hover:bg-white/5 transition grid grid-cols-2 md:table-row text-sm py-3">
+            <td>${d[0]}</td>
+            <td>${d[1]}</td>
+            <td class="hidden md:table-cell">${d[2]}</td>
+            <td><span class="px-2 py-1 text-xs rounded-full bg-${d[4]}-500/20 text-${d[4]}-400">${d[3]}</span></td>
+          </tr>
+        `);
+      });
+    }
+
+    $(document).ready(() => {
+      atualizarHora();
+      preencherTabela();
+      setInterval(atualizarHora, 1000);
+
+      // Mobile sidebar toggle
+      $('#openSidebar').on('click', () => $('#sidebar').removeClass('hidden-mobile'));
+      $('#closeSidebar').on('click', () => $('#sidebar').addClass('hidden-mobile'));
+
+      // Inicia sidebar oculta no mobile
+      if (window.innerWidth < 768) $('#sidebar').addClass('hidden-mobile');
+    });
+  </script>
+</body>
+</html>
