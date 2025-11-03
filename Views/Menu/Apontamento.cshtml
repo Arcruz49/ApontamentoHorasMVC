@@ -1,0 +1,112 @@
+@{
+    ViewData["Title"] = "Registro de Ponto";
+}
+
+<div class="p-8 text-gray-200">
+    <!-- Cabeçalho -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+        <div>
+            <h1 class="text-2xl font-semibold text-white flex items-center gap-2">
+                <i data-lucide="fingerprint" class="w-6 h-6 text-violet-500"></i>
+                Registro de Ponto
+            </h1>
+            <p class="text-sm text-gray-400 mt-1">Marque seu ponto e acompanhe suas horas</p>
+        </div>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="card p-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        
+        <!-- Escolha de local -->
+        <div class="flex flex-col items-center justify-center space-y-6">
+            <h2 class="text-lg font-medium text-gray-300">De onde você está trabalhando hoje?</h2>
+
+            <div class="flex justify-center gap-6">
+                <button id="btnCasa" class="bg-gray-800 hover:bg-violet-700/30 border border-gray-700 hover:border-violet-600 p-4 rounded-xl flex flex-col items-center transition">
+                    <i data-lucide="home" class="w-8 h-8 mb-2 text-gray-400"></i>
+                    <span>Casa</span>
+                </button>
+
+                <button id="btnEscritorio" class="bg-violet-700/20 border border-violet-500 p-4 rounded-xl flex flex-col items-center transition">
+                    <i data-lucide="building-2" class="w-8 h-8 mb-2 text-violet-400"></i>
+                    <span>Escritório</span>
+                </button>
+
+                <button id="btnOutro" class="bg-gray-800 hover:bg-violet-700/30 border border-gray-700 hover:border-violet-600 p-4 rounded-xl flex flex-col items-center transition">
+                    <i data-lucide="map-pin" class="w-8 h-8 mb-2 text-gray-400"></i>
+                    <span>Outro</span>
+                </button>
+            </div>
+
+            <button id="btnMarcarPonto" class="mt-6 bg-gradient-to-r from-violet-600 to-indigo-500 hover:from-violet-700 hover:to-indigo-600 text-white font-medium px-6 py-3 rounded-xl shadow-md flex items-center gap-2 transition">
+                <i data-lucide="fingerprint" class="w-5 h-5"></i>
+                Marcar Ponto
+            </button>
+        </div>
+
+        <!-- Informações do turno -->
+        <div class="flex flex-col items-center justify-center">
+            <div class="bg-gray-900/60 border border-gray-800 rounded-2xl p-8 w-full max-w-md text-center shadow-inner">
+                <p class="text-gray-400 mb-2">Último ponto</p>
+                <p class="text-xl font-semibold text-white mb-4">31/10/2025 às 18:00</p>
+
+                <div class="relative inline-flex items-center justify-center w-40 h-40 mb-4">
+                    <svg class="w-40 h-40 text-gray-700" viewBox="0 0 36 36">
+                        <path class="text-gray-700" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a15.9155 15.9155 0 0 1 0 31.831 a15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <path class="text-violet-500" stroke-width="3" stroke="currentColor" fill="none" stroke-dasharray="0,100" id="progress-circle"
+                              d="M18 2.0845 a15.9155 15.9155 0 0 1 0 31.831 a15.9155 15.9155 0 0 1 0 -31.831"/>
+                    </svg>
+                    <span class="absolute text-2xl font-bold text-white" id="horasTrabalhadas">00:00</span>
+                </div>
+
+                <p class="text-gray-400 text-sm mb-1">Seu turno está registrado como</p>
+                <p class="text-sm text-white font-medium">Turno 08:30 às 17:30</p>
+                <p class="text-xs text-gray-500 mt-3">Registro após 23:59 contará para a próxima jornada.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    lucide.createIcons();
+
+    // Simulação de seleção de local
+    const botoes = [$("#btnCasa"), $("#btnEscritorio"), $("#btnOutro")];
+
+    botoes.forEach(btn => {
+        btn.on("click", function() {
+            botoes.forEach(b => b.removeClass("border-violet-500 bg-violet-700/20").addClass("border-gray-700 bg-gray-800"));
+            $(this).addClass("border-violet-500 bg-violet-700/20");
+        });
+    });
+
+    // Simula animação do progresso de horas
+    let progresso = 0;
+    const circle = $("#progress-circle");
+    const horas = $("#horasTrabalhadas");
+
+    setInterval(() => {
+        progresso = (progresso + 2) % 100;
+        circle.attr("stroke-dasharray", `${progresso},100`);
+        const h = Math.floor(progresso / 6);
+        const m = (progresso * 36) % 60;
+        horas.text(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }, 1000);
+
+    $("#btnMarcarPonto").on("click", function() {
+        const notyf = new Notyf({
+            duration: 3000,
+            position: { x: 'right', y: 'top' },
+            types: [
+                {
+                    type: 'success',
+                    background: 'linear-gradient(90deg, #22c55e, #16a34a)',
+                    icon: false
+                }
+            ]
+        });
+        notyf.success('Ponto registrado com sucesso!');
+    });
+</script>
+}

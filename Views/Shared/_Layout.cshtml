@@ -1,39 +1,64 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using System.Security.Claims
+@{
+    var user = Context.User;
+    var nome = user.FindFirst(ClaimTypes.Name)?.Value;
+    ViewData["Title"] = "Registro de Ponto";
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - ApontamentoHoras</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Tailwind + Lucide + Notyf -->
+    <script src="~/lib/tailwind.js"></script>
+    <script src="~/lib/lucide.min.js"></script>
+    <link rel="stylesheet" href="~/css/notyf.min.css" />
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ApontamentoHoras.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
 
+    <style>
+        body {
+            background: #0f0f16;
+            color: #e5e7eb;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass {
+            background: rgba(20, 20, 31, 0.85);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .card {
+            background: rgba(30, 30, 46, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+    </style>
 </head>
-<body>
-    <aside id="sidebar" class="sidebar glass w-64 flex flex-col justify-between py-6 px-5 fixed md:static inset-y-0 left-0 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+
+<body class="flex min-h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="glass w-64 flex flex-col justify-between py-6 px-5 fixed inset-y-0 left-0 z-40">
         <div>
-            <div class="flex items-center justify-between md:justify-start gap-3 mb-8">
+            <div class="flex items-center justify-between mb-8">
                 <div class="flex items-center gap-3">
                     <img src="https://i.pravatar.cc/50" class="rounded-full border-2 border-violet-500" alt="foto perfil">
-                    <div class="hidden md:block">
-                        <p class="font-semibold text-white">Arthur Cruz</p>
+                    <div>
+                        <p class="font-semibold text-white">@nome</p>
                         <p class="text-sm text-gray-400">Desenvolvedor</p>
                     </div>
                 </div>
-                <button id="closeSidebar" class="md:hidden text-gray-400 hover:text-white">
-                    <i data-lucide="x"></i>
-                </button>
             </div>
 
-            <button class="w-full bg-gradient-to-r from-violet-600 to-indigo-500 text-white py-3 rounded-2xl font-medium mb-8 shadow-lg hover:scale-105 transform transition-all duration-200">
+            <button class="w-full bg-gradient-to-r from-violet-600 to-indigo-500 text-white py-3 rounded-2xl font-medium mb-8 shadow-lg hover:scale-105 transition">
                 <i data-lucide="clock" class="inline w-4 h-4 mr-2"></i> Marcar Ponto
             </button>
 
-            <nav class="flex flex-col gap-3 text-gray-400">
+            <nav class="flex flex-col gap-2 text-gray-400">
                 <a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-700/20 hover:text-white transition">
                     <i data-lucide="home"></i> Início
                 </a>
@@ -52,29 +77,120 @@
             </nav>
         </div>
 
-        <div class="flex flex-col gap-2 mt-6">
-            <button class="flex items-center gap-2 text-gray-400 hover:text-white transition hover:scale-105 transform">
+        <div class="flex flex-col gap-3 mt-6">
+            <button class="flex items-center gap-2 text-gray-400 hover:text-white transition hover:scale-105">
                 <i data-lucide="moon"></i> Modo claro
             </button>
-            <a href="/Usuario/Logout" class="flex items-center gap-2 text-gray-400 hover:text-white transition hover:scale-105 transform no-underline">
+            <a href="/Usuario/Logout" class="flex items-center gap-2 text-gray-400 hover:text-white transition hover:scale-105">
                 <i data-lucide="log-out"></i> Sair
             </a>
         </div>
     </aside>
 
+    <!-- Main Content -->
+    <main class="flex-1 ml-64 p-10">
+        <section class="max-w-6xl mx-auto">
+            <div class="mb-8">
+                <h1 class="text-2xl font-semibold text-white flex items-center gap-2">
+                    <i data-lucide="fingerprint" class="w-6 h-6 text-violet-500"></i>
+                    Registro de Ponto
+                </h1>
+                <p class="text-sm text-gray-400 mt-1">Marque seu ponto e acompanhe suas horas</p>
+            </div>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+            <div class="card grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
+                <!-- Seção de Local -->
+                <div class="flex flex-col items-center justify-center space-y-6">
+                    <h2 class="text-lg font-medium text-gray-300">De onde você está trabalhando hoje?</h2>
 
-    
+                    <div class="flex justify-center gap-6">
+                        <button id="btnCasa" class="bg-gray-800 hover:bg-violet-700/30 border border-gray-700 hover:border-violet-600 p-4 rounded-xl flex flex-col items-center transition">
+                            <i data-lucide="home" class="w-8 h-8 mb-2 text-gray-400"></i>
+                            <span>Casa</span>
+                        </button>
+
+                        <button id="btnEscritorio" class="bg-violet-700/20 border border-violet-500 p-4 rounded-xl flex flex-col items-center transition">
+                            <i data-lucide="building-2" class="w-8 h-8 mb-2 text-violet-400"></i>
+                            <span>Escritório</span>
+                        </button>
+
+                        <button id="btnOutro" class="bg-gray-800 hover:bg-violet-700/30 border border-gray-700 hover:border-violet-600 p-4 rounded-xl flex flex-col items-center transition">
+                            <i data-lucide="map-pin" class="w-8 h-8 mb-2 text-gray-400"></i>
+                            <span>Outro</span>
+                        </button>
+                    </div>
+
+                    <button id="btnMarcarPonto" class="mt-6 bg-gradient-to-r from-violet-600 to-indigo-500 hover:from-violet-700 hover:to-indigo-600 text-white font-medium px-6 py-3 rounded-xl shadow-md flex items-center gap-2 transition">
+                        <i data-lucide="fingerprint" class="w-5 h-5"></i>
+                        Marcar Ponto
+                    </button>
+                </div>
+
+                <!-- Painel de Turno -->
+                <div class="flex flex-col items-center justify-center">
+                    <div class="bg-gray-900/70 border border-gray-800 rounded-2xl p-8 w-full max-w-md text-center shadow-inner">
+                        <p class="text-gray-400 mb-2">Último ponto</p>
+                        <p class="text-xl font-semibold text-white mb-4">31/10/2025 às 18:00</p>
+
+                        <div class="relative inline-flex items-center justify-center w-40 h-40 mb-4">
+                            <svg class="w-40 h-40 text-gray-700" viewBox="0 0 36 36">
+                                <path class="text-gray-700" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a15.9155 15.9155 0 0 1 0 31.831 a15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path class="text-violet-500" stroke-width="3" stroke="currentColor" fill="none" stroke-dasharray="0,100" id="progress-circle"
+                                      d="M18 2.0845 a15.9155 15.9155 0 0 1 0 31.831 a15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <span class="absolute text-2xl font-bold text-white" id="horasTrabalhadas">00:00</span>
+                        </div>
+
+                        <p class="text-gray-400 text-sm mb-1">Seu turno está registrado como</p>
+                        <p class="text-sm text-white font-medium">Turno 08:30 às 17:30</p>
+                        <p class="text-xs text-gray-500 mt-3">Registro após 23:59 contará para a próxima jornada.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
-    
-    @await RenderSectionAsync("Scripts", required: false)
+    <script src="~/lib/notyf.min.js"></script>
+
+    <script>
+        lucide.createIcons();
+
+        // Botões de seleção de local
+        const botoes = [$("#btnCasa"), $("#btnEscritorio"), $("#btnOutro")];
+        botoes.forEach(btn => {
+            btn.on("click", function () {
+                botoes.forEach(b => b.removeClass("border-violet-500 bg-violet-700/20").addClass("border-gray-700 bg-gray-800"));
+                $(this).addClass("border-violet-500 bg-violet-700/20");
+            });
+        });
+
+        // Simula progresso das horas
+        let progresso = 0;
+        const circle = $("#progress-circle");
+        const horas = $("#horasTrabalhadas");
+
+        setInterval(() => {
+            progresso = (progresso + 2) % 100;
+            circle.attr("stroke-dasharray", `${progresso},100`);
+            const h = Math.floor(progresso / 6);
+            const m = (progresso * 36) % 60;
+            horas.text(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+        }, 1000);
+
+        // Notificação ao marcar ponto
+        $("#btnMarcarPonto").on("click", function () {
+            const notyf = new Notyf({
+                duration: 3000,
+                position: { x: 'right', y: 'top' },
+                types: [{
+                    type: 'success',
+                    background: 'linear-gradient(90deg, #22c55e, #16a34a)',
+                    icon: false
+                }]
+            });
+            notyf.success('Ponto registrado com sucesso!');
+        });
+    </script>
 </body>
 </html>

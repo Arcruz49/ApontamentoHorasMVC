@@ -21,6 +21,10 @@ public class MenuController : Controller
 
     public IActionResult Index()
     {
+        int loggedUserId = util.GetIdLoggedUser(User);
+        var fullName = db.usuario.Where(a => a.id == loggedUserId).Select(a => a.fullName).FirstOrDefault();
+
+        @ViewBag.fullname = fullName;
         return View();
     }
 
@@ -32,12 +36,18 @@ public class MenuController : Controller
             var dados = db.usuario.ToList();
             return Json(new { success = true, data = dados });
         }
-        catch(Exception ex){
+        catch (Exception ex)
+        {
 
             var message = util.ErrorMessage(ex);
             return Json(new { success = false, message = message });
-            
+
         }
+    }
+    
+    public IActionResult Apontamento()
+    {
+        return View();
     }
 
 }

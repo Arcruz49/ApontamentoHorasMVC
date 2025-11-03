@@ -54,7 +54,8 @@ public class UsuarioController : Controller
             // Criar claims do usuário
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, usuario.name),
+                new Claim(ClaimTypes.Name, usuario.fullName),
+                new Claim(ClaimTypes.NameIdentifier, usuario.name),
                 new Claim("UserId", usuario.id.ToString())
             };
 
