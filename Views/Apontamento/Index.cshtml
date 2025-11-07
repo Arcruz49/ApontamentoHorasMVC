@@ -47,8 +47,12 @@
         <!-- Informações do turno -->
         <div class="flex flex-col items-center justify-center">
             <div class="bg-gray-900/60 border border-gray-800 rounded-2xl p-8 w-full max-w-md text-center shadow-inner">
-                <p class="text-gray-400 mb-2">Último ponto</p>
-                <p class="text-xl font-semibold text-white mb-4">31/10/2025 às 18:00</p>
+
+                <div class="lastPontoDiv hidden">
+                    <p class="text-gray-400 mb-2">Último ponto</p>
+                    <p class="text-xl font-semibold text-white mb-4">31/10/2025 às 18:00</p>
+                </div>
+                
 
                 <div class="relative inline-flex items-center justify-center w-40 h-40 mb-4">
                     <svg class="w-40 h-40 text-gray-700" viewBox="0 0 36 36">
@@ -67,9 +71,45 @@
     </div>
 </div>
 
-@section Scripts {
 <script>
+    $(document).ready(function () {
+
+        function GetLastApontamento() {
+            $.ajax({
+                url: "/Apontamento/GetLastApontamento",
+                type: "GET",
+                success: function (response) {
+                    if (response.success === true && response.data) {
+                        const data = new Date(response.data);
+
+                        // Formata data e hora
+                        const dia = String(data.getDate()).padStart(2, '0');
+                        const mes = String(data.getMonth() + 1).padStart(2, '0');
+                        const ano = data.getFullYear();
+                        const hora = String(data.getHours()).padStart(2, '0');
+                        const min = String(data.getMinutes()).padStart(2, '0');
+
+                        const dataFormatada = `${dia}/${mes}/${ano} às ${hora}:${min}`;
+
+                        // Atualiza o HTML
+                        $(".lastPontoDiv p.text-xl").text(dataFormatada);
+                        $(".lastPontoDiv").removeClass("hidden");
+                    } else {
+                        $(".lastPontoDiv p.text-xl").text("Nenhum registro encontrado");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    notyf.error("Erro ao obter último ponto: " + error);
+                }
+            });
+        }
+        GetLastApontamento();
+    });
+
+
+
     lucide.createIcons();
+    const notyf = new Notyf();
 
     // Simulação de seleção de local
     const botoes = [$("#btnCasa"), $("#btnEscritorio"), $("#btnOutro")];
@@ -81,32 +121,32 @@
         });
     });
 
-    // Simula animação do progresso de horas
-    let progresso = 0;
-    const circle = $("#progress-circle");
-    const horas = $("#horasTrabalhadas");
 
-    setInterval(() => {
-        progresso = (progresso + 2) % 100;
-        circle.attr("stroke-dasharray", `${progresso},100`);
-        const h = Math.floor(progresso / 6);
-        const m = (progresso * 36) % 60;
-        horas.text(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    }, 1000);
-
-    $("#btnMarcarPonto").on("click", function() {
-        const notyf = new Notyf({
-            duration: 3000,
-            position: { x: 'right', y: 'top' },
-            types: [
-                {
-                    type: 'success',
-                    background: 'linear-gradient(90deg, #22c55e, #16a34a)',
-                    icon: false
+    $("#btnMarcarPonto").on("click", function () {
+        $("#btnMarcarPonto").prop("disabled", true);
+        showLoading();
+        $.ajax({
+            url: "/Apontamento/CreateApontamento",    
+            type: "POST",                   
+            data: {                         
+            },
+            success: function (response) {
+                if (response.success === true) {
+                    notyf.success(response.message);
+                    setTimeout(() => {
+                        hideLoading();
+                        window.location.href = "/";
+                    }, 1500); 
                 }
-            ]
+                else{
+                    $("#btnMarcarPonto").prop("disabled", false);
+                    notyf.success(response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                notyf.error("Erro ao registrar o ponto: " + error);
+            }
         });
-        notyf.success('Ponto registrado com sucesso!');
     });
 </script>
-}
+

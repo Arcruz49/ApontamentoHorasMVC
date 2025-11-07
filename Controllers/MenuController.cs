@@ -45,9 +45,9 @@ public class MenuController : Controller
         }
     }
     
-    public IActionResult Apontamento()
-    {
-        return View();
-    }
+    // public IActionResult Apontamento()
+    // {
+    //     return View();
+    // }
 
 }

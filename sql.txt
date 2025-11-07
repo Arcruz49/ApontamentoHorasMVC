@@ -12,7 +12,7 @@ CREATE TABLE usuario
 );
 
 
-CREATE TABLE Apontamento
+CREATE TABLE apontamento
 (
     id INT PRIMARY KEY AUTO_INCREMENT,
     dtApontamento DATETIME,
