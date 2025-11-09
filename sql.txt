@@ -3,14 +3,45 @@ CREATE DATABASE ApontamentoHoras
 
 USE ApontamentoHoras
 
+
+CREATE TABLE cargo
+(
+	id int PRIMARY KEY AUTO_INCREMENT,
+	name varchar(255),
+    dtCreation DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE turno (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(5000),
+    dtCreation DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE turno_weekday (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    turno_id INT NOT NULL,
+    weekday ENUM('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday') NOT NULL,
+    entryTime TIME,
+    exitTime TIME,
+    FOREIGN KEY (turno_id) REFERENCES turno(id) ON DELETE CASCADE
+);
+
 CREATE TABLE usuario
 (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(500),
+    fullName varchar(500),
     password VARCHAR(500),
-    dtCreation DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+    id_cargo INT,
+    id_turno INT,
+    dtCreation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usuario_cargo
+        FOREIGN KEY (id_cargo) REFERENCES cargo(id),
 
+    CONSTRAINT fk_usuario_turno
+        FOREIGN KEY (id_turno) REFERENCES turno(id)
+);
 
 CREATE TABLE apontamento
 (
@@ -22,10 +53,4 @@ CREATE TABLE apontamento
         REFERENCES usuario(id)
 
 );
-
-
-
-
-
-
 

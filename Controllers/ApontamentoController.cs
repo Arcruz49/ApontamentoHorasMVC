@@ -74,18 +74,23 @@ public class ApontamentoController : Controller
             return Json(new { success = false, message = util.ErrorMessage(ex) });
         }
     }
-    
+
     [HttpGet]
-    public JsonResult GetApontamentosAnteriores()
+    [Authorize]
+    public JsonResult GetApontamentosAnteriores(int dias = 30)
     {
         try
         {
             var usuario = util.GetIdLoggedUser(User);
-            if (usuario == 0)
-                return Json(new { success = false, message = "Usuário não logado" });
+            
+            if (usuario == 0) return Json(new { success = false, message = "Usuário não logado" });
+
+
+            var hoje = DateTime.Now.Date;
 
             var apontamentos = db.apontamento
                 .Where(a => a.id_usuario == usuario)
+                .Where(a => a.dtApontamento < hoje)
                 .OrderBy(a => a.dtApontamento)
                 .ToList();
 
@@ -95,7 +100,7 @@ public class ApontamentoController : Controller
             // Agrupa por data (somente dia, sem hora)
             var agrupadoPorDia = apontamentos
                 .GroupBy(a => a.dtApontamento.Date)
-                .OrderByDescending(g => g.Key);
+                .OrderByDescending(g => g.Key).Take(dias);
 
             List<ResourceApontamento> resultApontamentos = new();
 
@@ -121,14 +126,8 @@ public class ApontamentoController : Controller
                 TimeSpan jornadaEsperada = TimeSpan.FromHours(8);
                 TimeSpan saldo = tempoTotal - jornadaEsperada;
 
-                string status;
-                if (tempoTotal == jornadaEsperada)
-                    status = "Concluído";
-                else if (tempoTotal < jornadaEsperada)
-                    status = "Ocorrência";
-                else
-                    status = "Excedente";
-
+                string status = tempoTotal >= jornadaEsperada ? "Concluído" : "Ocorrência";
+                
                 resultApontamentos.Add(new ResourceApontamento
                 {
                     Data = grupo.Key,
@@ -146,6 +145,158 @@ public class ApontamentoController : Controller
         }
     }
 
+
+    [HttpGet]
+    [Authorize]
+    public JsonResult GetSaldoHoras()
+    {
+        try
+        {
+            var usuario = util.GetIdLoggedUser(User);
+
+            if (usuario == 0) 
+                return Json(new { success = false, message = "Usuário não logado" });
+
+            TimeSpan saldoTotal = new TimeSpan();
+
+            var hoje = DateTime.Now.Date;
+
+            var apontamentos = db.apontamento
+                .Where(a => a.id_usuario == usuario)
+                .Where(a => a.dtApontamento < hoje)
+                .OrderBy(a => a.dtApontamento)
+                .ToList();
+
+            if (!apontamentos.Any())
+                return Json(new { success = false, message = "Nenhum apontamento encontrado" });
+
+            // Agrupa por data (somente dia, sem hora)
+            var agrupadoPorDia = apontamentos
+                .GroupBy(a => a.dtApontamento.Date)
+                .OrderByDescending(g => g.Key);
+
+
+            foreach (var grupo in agrupadoPorDia)
+            {
+                var lista = grupo.OrderBy(a => a.dtApontamento).ToList();
+                TimeSpan tempoTotal = TimeSpan.Zero;
+
+                // Percorre as batidas de 2 em 2 (entrada → saída)
+                for (int i = 0; i < lista.Count - 1; i += 2)
+                {
+                    DateTime entrada = lista[i].dtApontamento;
+                    DateTime saida = lista[i + 1].dtApontamento;
+
+                    if (saida > entrada)
+                        tempoTotal += (saida - entrada);
+                }
+
+                // Calcula saldo diário
+                TimeSpan jornadaEsperada = TimeSpan.FromHours(8);
+                TimeSpan saldo = tempoTotal - jornadaEsperada;
+
+                saldoTotal = saldoTotal.Add(saldo);
+            }
+
+            // Formatação e sinal
+            bool positive = saldoTotal.TotalMinutes >= 0;
+            var horas = (int)Math.Floor(Math.Abs(saldoTotal.TotalHours));
+            var minutos = Math.Abs(saldoTotal.Minutes);
+            string saldoFormatado = $"{horas:D2}:{minutos:D2}";
+
+            return Json(new 
+            { 
+                success = true, 
+                data = saldoFormatado, 
+                positive = positive 
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = util.ErrorMessage(ex) });
+        }
+    }
+
+    [HttpGet]
+    [Authorize]
+    // função de teste e debug
+    public JsonResult GetSaldoHorasDetalhado()
+    {
+        try
+        {
+            var usuario = util.GetIdLoggedUser(User);
+            if (usuario == 0) return Json(new { success = false, message = "Usuário não logado" });
+
+
+            var hoje = DateTime.Now.Date;
+
+            var apontamentos = db.apontamento
+                .Where(a => a.id_usuario == usuario)
+                .Where(a => a.dtApontamento < hoje)
+                .OrderBy(a => a.dtApontamento)
+                .ToList();
+
+
+            if (!apontamentos.Any())
+                return Json(new { success = false, message = "Nenhum apontamento encontrado" });
+
+            TimeSpan saldoTotal = TimeSpan.Zero;
+            TimeSpan totalPositivo = TimeSpan.Zero;
+            TimeSpan totalNegativo = TimeSpan.Zero;
+
+            var agrupadoPorDia = apontamentos
+                .GroupBy(a => a.dtApontamento.Date)
+                .OrderByDescending(g => g.Key);
+
+            var detalhes = new List<object>();
+
+            foreach (var grupo in agrupadoPorDia)
+            {
+                var lista = grupo.OrderBy(a => a.dtApontamento).ToList();
+                TimeSpan tempoTotal = TimeSpan.Zero;
+
+                for (int i = 0; i < lista.Count - 1; i += 2)
+                {
+                    DateTime entrada = lista[i].dtApontamento;
+                    DateTime saida = lista[i + 1].dtApontamento;
+                    if (saida > entrada) tempoTotal += (saida - entrada);
+                }
+
+                TimeSpan jornada = TimeSpan.FromHours(8);
+                TimeSpan saldoDia = tempoTotal - jornada;
+
+                // acumula positivo/negativo separadamente
+                if (saldoDia >= TimeSpan.Zero) totalPositivo = totalPositivo.Add(saldoDia);
+                else totalNegativo = totalNegativo.Add(saldoDia); // negativo
+
+                saldoTotal = saldoTotal.Add(saldoDia);
+
+                detalhes.Add(new {
+                    data = grupo.Key.ToString("yyyy-MM-dd"),
+                    tempo = tempoTotal.ToString(@"hh\:mm"),
+                    saldoDia = (saldoDia < TimeSpan.Zero ? "-" : "+") + $"{Math.Abs((int)saldoDia.TotalHours):D2}:{Math.Abs(saldoDia.Minutes):D2}"
+                });
+            }
+
+            // formato para totals maiores que 24h (mostra horas totais)
+            string FormatTotal(TimeSpan ts)
+                => $"{(ts < TimeSpan.Zero ? "-" : "")}{Math.Abs((long)ts.TotalHours)}:{Math.Abs(ts.Minutes):D2}";
+
+            return Json(new {
+                success = true,
+                data = new {
+                    saldoLiquido = FormatTotal(saldoTotal),
+                    totalExtras = FormatTotal(totalPositivo),
+                    totalOcorrencias = FormatTotal(totalNegativo), // negativo value
+                    detalhesPorDia = detalhes
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = util.ErrorMessage(ex) });
+        }
+    }
 
 
 

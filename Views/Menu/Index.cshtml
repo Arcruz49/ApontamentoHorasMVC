@@ -48,7 +48,7 @@
         <h3 class="text-4xl font-bold mb-4 text-violet-400" id="horaAtual"></h3>
 
         <div class="bg-violet-600/30 text-center rounded-md py-2 text-sm mb-4 border border-violet-600/40">
-          Último ponto registrado: <span class="font-semibold text-white">31/10/2025 12:10</span>
+          Último ponto registrado: <span class="font-semibold text-white ultimoPonto"></span>
         </div>
 
         <p class="text-gray-400 text-sm mb-1">Horas faltantes</p>
@@ -89,7 +89,7 @@
       <div class="card flex justify-between items-center p-6">
         <div>
           <p class="text-gray-400 text-sm">Saldo de horas</p>
-          <h2 class="text-3xl font-bold text-green-400">+91:27</h2>
+          <h2 class="text-3xl font-bold text-green-400 saldoHoras"></h2>
         </div>
         <p class="text-xs text-gray-500">Desde 11/01/2024</p>
       </div>
@@ -116,38 +116,119 @@
     }
 
     function preencherTabela() {
-      const dias = [
-        ['30/10/2025', '04:44', '-0:15', 'Ocorrência', 'yellow'],
-        ['29/10/2025', '09:30', '+01:30', 'Concluído', 'green'],
-        ['28/10/2025', '07:57', '+00:00', 'Concluído', 'green'],
-        ['27/10/2025', '08:28', '+00:28', 'Aprovado', 'green'],
-        ['26/10/2025', '00:00', '+00:00', 'Concluído', 'green'],
-        ['25/10/2025', '00:00', '+00:00', 'Concluído', 'green'],
-        ['24/10/2025', '08:25', '+00:25', 'Concluído', 'green'],
-        ['23/10/2025', '08:05', '+00:00', 'Aprovado', 'green'],
-        ['22/10/2025', '07:58', '+00:00', 'Concluído', 'green'],
-        ['21/10/2025', '08:01', '+00:00', 'Concluído', 'green'],
-        ['25/10/2025', '00:00', '+00:00', 'Concluído', 'green'],
-        ['24/10/2025', '08:25', '+00:25', 'Concluído', 'green'],
-        ['23/10/2025', '08:05', '+00:00', 'Aprovado', 'green'],
-        ['22/10/2025', '07:58', '+00:00', 'Concluído', 'green'],
-        ['21/10/2025', '08:01', '+00:00', 'Concluído', 'green']
-      ];
-      dias.forEach(d => {
-        $('#tabelaDias').append(`
-          <tr class="border-b border-gray-800 hover:bg-white/5 transition grid grid-cols-2 md:table-row text-sm py-3">
-            <td>${d[0]}</td>
-            <td>${d[1]}</td>
-            <td class="hidden md:table-cell">${d[2]}</td>
-            <td><span class="px-2 py-1 text-xs rounded-full bg-${d[4]}-500/20 text-${d[4]}-400">${d[3]}</span></td>
-          </tr>
-        `);
+
+
+      $.ajax({
+        url: "/Apontamento/GetApontamentosAnteriores",    
+        type: "GET",
+        success: function (response) {
+          if (response.success === true) {
+            response.data.forEach(d => {
+              const dataFormatada = new Date(d.data).toLocaleDateString('pt-BR');
+
+              const tempoFormatado = d.tempo.substring(0, 5);
+              let saldoFormatado = '+' + d.saldo.substring(0, 5);
+              if(d.saldo.includes('-')){
+                saldoFormatado = d.saldo.substring(0, 6);
+              }
+
+              const corStatus = d.status === "Concluído" 
+                ? "bg-green-500/20 text-green-400" 
+                : d.status === "Excedente" 
+                ? "bg-blue-500/20 text-blue-400" 
+                : "bg-yellow-500/20 text-yellow-400";
+
+              $('#tabelaDias').append(`
+                <tr class="border-b border-gray-800 hover:bg-white/5 transition grid grid-cols-2 md:table-row text-sm py-3">
+                  <td>${dataFormatada}</td>
+                  <td>${tempoFormatado}</td>
+                  <td class="hidden md:table-cell">${saldoFormatado}</td>
+                  <td>
+                    <span class="px-2 py-1 text-xs rounded-full ${corStatus}">
+                      ${d.status}
+                    </span>
+                  </td>
+                </tr>
+              `);
+            });
+          } else {
+            $("#btnMarcarPonto").prop("disabled", false);
+            notyf.success(response.message);
+          }
+        },
+        error: function (xhr, status, error) {
+          notyf.error("Erro ao buscar registros: " + error);
+        }
+      });
+
+
+    }
+
+
+    function getSaldoHoras(){
+      $.ajax({
+        url: "/Apontamento/GetSaldoHoras",    
+        type: "GET",
+        success: function (response) {
+          if(response.success == true){
+
+            if(response.positive == true){
+              $('.saldoHoras').addClass('text-green-400');
+              $('.saldoHoras').removeClass('text-red-400');
+              $('.saldoHoras').html('+' + response.data);
+
+            } 
+            else{
+              $('.saldoHoras').removeClass('text-green-400');
+              $('.saldoHoras').addClass('text-red-400');
+              $('.saldoHoras').html('-' + response.data);
+            }
+
+          }
+          else {
+            notyf.success(response.message);
+          }
+        },
+        error: function (xhr, status, error) {
+          notyf.error("Erro ao buscar saldo: " + error);
+        }
       });
     }
+
+    function GetLastApontamento() {
+      $.ajax({
+          url: "/Apontamento/GetLastApontamento",
+          type: "GET",
+          success: function (response) {
+              if (response.success === true && response.data) {
+                  const data = new Date(response.data);
+
+                  const dia = String(data.getDate()).padStart(2, '0');
+                  const mes = String(data.getMonth() + 1).padStart(2, '0');
+                  const ano = data.getFullYear();
+                  const hora = String(data.getHours()).padStart(2, '0');
+                  const min = String(data.getMinutes()).padStart(2, '0');
+
+                  const dataFormatada = `${dia}/${mes}/${ano}  ${hora}:${min}`;
+
+                  $(".ultimoPonto").text(dataFormatada);
+                  $(".lastPontoDiv").removeClass("hidden");
+              } else {
+                  $(".lastPontoDiv p.text-xl").text("Nenhum registro encontrado");
+              }
+          },
+          error: function (xhr, status, error) {
+              notyf.error("Erro ao obter último ponto: " + error);
+          }
+      });
+    }
+
 
     $(document).ready(() => {
       atualizarHora();
       preencherTabela();
+      getSaldoHoras();
+      GetLastApontamento();
       setInterval(atualizarHora, 1000);
 
       // Mobile sidebar toggle

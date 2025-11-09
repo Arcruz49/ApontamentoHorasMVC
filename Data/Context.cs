@@ -9,6 +9,9 @@ public class Context : DbContext
 
     public DbSet<Usuario> usuario { get; set; }
     public DbSet<Apontamento> apontamento { get; set; }
+    public DbSet<Cargo> cargo { get; set; }
+    public DbSet<Turno> turno { get; set; }
+    public DbSet<TurnoWeekday> turno_weekday { get; set; }
 
 
 
@@ -20,6 +23,14 @@ public class Context : DbContext
 
         modelBuilder.Entity<Apontamento>()
             .Property(a => a.dtApontamento)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        modelBuilder.Entity<Cargo>()
+            .Property(a => a.dtCreation)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        modelBuilder.Entity<Turno>()
+            .Property(a => a.dtCreation)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 

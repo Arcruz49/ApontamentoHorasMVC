@@ -20,12 +20,12 @@ public class Util
     }
 
 
-    public RetornoGenerico<Usuario> CreateUserHelper(string user = "arthur.cruz", string password = "123")
+    public RetornoGenerico<Usuario> CreateUserHelper(string user = "arthur.cruz", string fullname = "Arthur Cruz", string password = "123")
     {
         try
         {
 
-            var usuario = new Usuario { name = user };
+            var usuario = new Usuario { name = user, fullName = fullname };
 
             var passwordHasher = new PasswordHasher<Usuario>();
             usuario.password = passwordHasher.HashPassword(usuario, password);
