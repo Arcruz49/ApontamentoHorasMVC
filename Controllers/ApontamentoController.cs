@@ -227,7 +227,6 @@ public class ApontamentoController : Controller
             var usuario = util.GetIdLoggedUser(User);
             if (usuario == 0) return Json(new { success = false, message = "Usuário não logado" });
 
-
             var hoje = DateTime.Now.Date;
 
             var apontamentos = db.apontamento
@@ -271,7 +270,8 @@ public class ApontamentoController : Controller
 
                 saldoTotal = saldoTotal.Add(saldoDia);
 
-                detalhes.Add(new {
+                detalhes.Add(new
+                {
                     data = grupo.Key.ToString("yyyy-MM-dd"),
                     tempo = tempoTotal.ToString(@"hh\:mm"),
                     saldoDia = (saldoDia < TimeSpan.Zero ? "-" : "+") + $"{Math.Abs((int)saldoDia.TotalHours):D2}:{Math.Abs(saldoDia.Minutes):D2}"
@@ -282,15 +282,58 @@ public class ApontamentoController : Controller
             string FormatTotal(TimeSpan ts)
                 => $"{(ts < TimeSpan.Zero ? "-" : "")}{Math.Abs((long)ts.TotalHours)}:{Math.Abs(ts.Minutes):D2}";
 
-            return Json(new {
+            return Json(new
+            {
                 success = true,
-                data = new {
+                data = new
+                {
                     saldoLiquido = FormatTotal(saldoTotal),
                     totalExtras = FormatTotal(totalPositivo),
-                    totalOcorrencias = FormatTotal(totalNegativo), // negativo value
+                    totalOcorrencias = FormatTotal(totalNegativo),
                     detalhesPorDia = detalhes
                 }
             });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = util.ErrorMessage(ex) });
+        }
+    }
+
+    [Authorize]
+    [HttpGet]
+    public JsonResult GetStatusTrabalho()
+    {
+        try
+        {
+            var usuario = util.GetIdLoggedUser(User);
+            if (usuario == 0) return Json(new { success = false, message = "Usuário não logado" });
+
+            var hoje = DateTime.Now.Date;
+
+            var apontamentos = db.apontamento
+                .Where(a => a.id_usuario == usuario && a.dtApontamento.Date == hoje)
+                .OrderBy(a => a.dtApontamento)
+                .ToList();
+
+            if (apontamentos.Count == 0) return Json(new { success = true, message = "" });
+
+            if (apontamentos.Count == 1) return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = 0, horasTurno = 8 });
+            
+            TimeSpan horasTotais = TimeSpan.Zero;
+            for (int i = 0; i < apontamentos.Count; i += 2)
+            {
+                var entrada = apontamentos[i].dtApontamento;
+                var saida = apontamentos[i + 1].dtApontamento;
+
+                if (saida > entrada) horasTotais += (saida - entrada);
+            }
+
+            if (apontamentos.Count % 2 == 1) return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = 0, horasTurno = 8 });
+
+            if (horasTotais.TotalHours >= 8) return Json(new { success = true, message = "Concluído", horasTrabalhadas = horasTotais, horasTurno = 8 });
+
+            else return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = horasTotais, horasTurno = 8 });
         }
         catch (Exception ex)
         {
