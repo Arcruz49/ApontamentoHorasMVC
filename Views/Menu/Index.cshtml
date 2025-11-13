@@ -227,14 +227,18 @@
     function GetStatusTrabalho() {
       $.ajax({
           url: "/Apontamento/GetStatusTrabalho",
-          type: "GET",
+        type: "GET",
           success: function (response) {
             console.log(response)
               if (response.success === true) {
-                  $('.statusTrabalho').text(response.message)
-              } else {
-
+                $('.statusTrabalho').text(response.message);
+              } 
+              else {
+                console.log(response.message);
               }
+
+              $('#tempoRestante').text(response.horasTrabalhadas); 
+
           },
           error: function (xhr, status, error) {
               notyf.error("Erro ao obter último ponto: " + error);

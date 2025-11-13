@@ -316,9 +316,9 @@ public class ApontamentoController : Controller
                 .OrderBy(a => a.dtApontamento)
                 .ToList();
 
-            if (apontamentos.Count == 0) return Json(new { success = true, message = "" });
+            if (apontamentos.Count == 0) return Json(new { success = true, message = "", horasTrabalhadas = "00:00:00", horasTurno = 8 });
 
-            if (apontamentos.Count == 1) return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = 0, horasTurno = 8 });
+            if (apontamentos.Count == 1) return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = "00:00:00", horasTurno = 8 });
             
             TimeSpan horasTotais = TimeSpan.Zero;
             for (int i = 0; i < apontamentos.Count; i += 2)
@@ -329,7 +329,7 @@ public class ApontamentoController : Controller
                 if (saida > entrada) horasTotais += (saida - entrada);
             }
 
-            if (apontamentos.Count % 2 == 1) return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = 0, horasTurno = 8 });
+            if (apontamentos.Count % 2 == 1) return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = "00:00:00", horasTurno = 8 });
 
             if (horasTotais.TotalHours >= 8) return Json(new { success = true, message = "Concluído", horasTrabalhadas = horasTotais, horasTurno = 8 });
 
