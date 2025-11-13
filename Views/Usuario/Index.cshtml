@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = "Gerenciamento de Usuários";
+}
+
+<div class="p-8 text-gray-200">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+        <div>
+            <h1 class="text-2xl font-semibold text-white flex items-center gap-2">
+                <i data-lucide="users" class="w-6 h-6 text-violet-500"></i>
+                Gerenciamento de Usuários
+            </h1>
+            <p class="text-sm text-gray-400 mt-1">Visualize e gerencie os usuários</p>
+        </div>
+
+        <a href="/Usuario/Criar" id="btnNovoUsuario"
+           class="bg-gradient-to-r from-violet-600 to-indigo-500 hover:from-violet-700 hover:to-indigo-600 text-white font-medium px-6 py-3 rounded-xl shadow-md flex items-center gap-2 transition">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            Novo Usuário
+        </a>
+    </div>
+
+    <div class="card p-6 bg-gray-900/60 border border-gray-800 rounded-2xl shadow-inner overflow-hidden">
+        <table class="min-w-full text-sm text-gray-300">
+            <thead class="border-b border-gray-700 text-gray-400">
+                <tr>
+                    <th class="text-left py-3 px-4">Nome</th>
+                    <th class="text-left py-3 px-4">Email</th>
+                    <th class="text-left py-3 px-4">Cargo</th>
+                    <th class="text-left py-3 px-4">Status</th>
+                    <th class="text-center py-3 px-4">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="usuariosTabela" class="divide-y divide-gray-800">
+            </tbody>
+        </table>
+
+        <div id="semUsuarios" class="text-center py-10 text-gray-500 hidden">
+            <i data-lucide="user-x" class="w-10 h-10 mx-auto mb-3"></i>
+            Nenhum usuário encontrado
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        const notyf = new Notyf();
+
+        function carregarUsuarios() {
+            $.ajax({
+                url: "/Usuario/GetUsers",
+                type: "GET",
+                success: function (response) {
+                    const tabela = $("#usuariosTabela");
+                    tabela.empty();
+
+                    if (!response.success || response.data.length === 0) {
+                        $("#semUsuarios").removeClass("hidden");
+                        return;
+                    }
+
+                    $("#semUsuarios").addClass("hidden");
+
+                    response.data.forEach(usuario => {
+                        const statusCor = usuario.admin
+                            ? "text-green-400 bg-green-500/10 border border-green-600/30"
+                            : "text-gray-400 bg-gray-700/30 border border-gray-600/30";
+
+                        const linha = `
+                            <tr class="hover:bg-violet-700/10 transition">
+                                <td class="py-3 px-4">${usuario.fullName}</td>
+                                <td class="py-3 px-4">${usuario.name}</td>
+                                <td class="py-3 px-4">${usuario.id_cargo ?? '-'}</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-3 py-1 rounded-lg text-xs font-medium ${statusCor}">
+                                        ${usuario.admin ? "Admin" : "Usuário"}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-center flex justify-center gap-3">
+                                    <button class="hover:text-violet-400 transition" title="Editar">
+                                        <i data-lucide="edit" class="w-5 h-5"></i>
+                                    </button>
+                                    <button class="hover:text-red-400 transition btnExcluir" data-id="${usuario.id}" title="Excluir">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
+                        tabela.append(linha);
+                    });
+
+                    lucide.createIcons();
+                },
+                error: function () {
+                    notyf.error("Erro ao carregar usuários.");
+                }
+            });
+        }
+
+        $(document).on("click", ".btnExcluir", function () {
+            const id = $(this).data("id");
+
+            if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
+
+            $.ajax({
+                url: "/Usuario/DeleteUser/",
+                data:{
+                    id : id
+                },
+                type: "POST",
+                success: function (response) {
+                    if (response.success) {
+                        notyf.success(response.message);
+                        carregarUsuarios();
+                    } else {
+                        notyf.error(response.message || "Erro ao excluir usuário.");
+                    }
+                },
+                error: function () {
+                    notyf.error("Erro.");
+                }
+            });
+        });
+
+        carregarUsuarios();
+    });
+</script>
+

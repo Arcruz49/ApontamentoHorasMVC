@@ -2,6 +2,7 @@
 @{
     var user = Context.User;
     var nome = user.FindFirst(ClaimTypes.Name)?.Value;
+    var admin = user.FindFirst("Admin")?.Value == "True";
     ViewData["Title"] = "Registro de Ponto";
 }
 
@@ -33,7 +34,7 @@
         <div>
             <div class="flex items-center justify-between mb-8">
                 <div class="flex items-center gap-3">
-                    <img src="https://i.pravatar.cc/50" class="rounded-full border-2 border-violet-500" alt="foto perfil">
+                    <img src="~/images/default_profile.jpg" class="w-12 h-12 object-cover rounded-full border-2 border-violet-500" alt="foto perfil">                    
                     <div>
                         <p class="font-semibold text-white">@nome</p>
                         <p class="text-sm text-gray-400">Desenvolvedor</p>
@@ -62,13 +63,25 @@
                 <a href="#" class="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-700/20 hover:text-white transition">
                     <i data-lucide="file-text"></i> Histórico
                 </a>
+                
+                @if(admin)
+                {
+                   <a href="/Usuario" class="flex items-center gap-3 p-2 rounded-xl hover:bg-violet-700/20 hover:text-white transition">
+                      <i data-lucide="users"></i> Usuários
+                  </a>
+
+                }
+                 
+
+
+
             </nav>
         </div>
 
         <div class="flex flex-col gap-3 mt-6">
-            <button class="flex items-center gap-2 text-gray-400 hover:text-white transition hover:scale-105">
+            @* <button class="flex items-center gap-2 text-gray-400 hover:text-white transition hover:scale-105">
                 <i data-lucide="moon"></i> Modo claro
-            </button>
+            </button> *@
             <a href="/Usuario/Logout" class="flex items-center gap-2 text-gray-400 hover:text-white transition hover:scale-105">
                 <i data-lucide="log-out"></i> Sair
             </a>
@@ -95,7 +108,6 @@
 
             lucide.createIcons();
 
-            // Botões de seleção de local
             const botoes = [$("#btnCasa"), $("#btnEscritorio"), $("#btnOutro")];
             botoes.forEach(btn => {
                 btn.on("click", function () {
@@ -104,7 +116,6 @@
                 });
             });
 
-            // Simula progresso das horas
             let progresso = 0;
             const circle = $("#progress-circle");
             const horas = $("#horasTrabalhadas");

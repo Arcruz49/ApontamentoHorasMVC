@@ -7,6 +7,7 @@ using ApontamentoHoras.Utils;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ApontamentoHoras.Controllers;
 
@@ -20,6 +21,7 @@ public class UsuarioController : Controller
         db = context;
     }
 
+    [Authorize]
     public IActionResult Index()
     {
         return View();
@@ -56,7 +58,8 @@ public class UsuarioController : Controller
             {
                 new Claim(ClaimTypes.Name, usuario.fullName),
                 new Claim(ClaimTypes.NameIdentifier, usuario.name),
-                new Claim("UserId", usuario.id.ToString())
+                new Claim("UserId", usuario.id.ToString()),
+                new Claim("Admin", (usuario.admin ?? false).ToString())
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -114,6 +117,93 @@ public class UsuarioController : Controller
 
         return Json(new { success = false, message = loggedUserId });
 
+    }
+
+
+
+    [Authorize]
+    [HttpGet]
+    public JsonResult GetUserPermission()
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            var adminClaim = User.FindFirst("Admin")?.Value;
+
+            if (userIdClaim == null)
+                return Json(new { success = false, message = "Usuário não autenticado" });
+
+            bool isAdmin = adminClaim == "True";
+
+            return Json(new
+            {
+                success = true,
+                userId = userIdClaim,
+                adminClaim = adminClaim,
+                isAdmin = isAdmin
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new
+            {
+                success = false,
+                message = $"Erro: {ex.Message}"
+            });
+        }
+    }
+
+
+    [Authorize]
+    [HttpGet]
+    public JsonResult GetUsers()
+    {
+        try
+        {
+            var users = (from a in db.usuario
+                         select new ResourceUsuario
+                         {
+                             id = a.id,
+                             name = a.name,
+                             fullName = a.fullName,
+                             admin = a.admin,
+                             id_cargo = a.id_cargo,
+                             id_turno = a.id_turno,
+                             dtCreation = a.dtCreation,
+                         }).ToList();
+
+            return Json(new { success = true, message = "", data = users });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = util.ErrorMessage(ex) });
+        }
+    }
+    
+    [Authorize]
+    [HttpPost]
+    public JsonResult DeleteUser(int id = 0)
+    {
+        try
+        {
+            if (id == 0) return Json(new { success = false, message = "Id não identificado" });
+
+            var user = db.usuario.Where(a => a.id == id).FirstOrDefault();
+
+            if (user == null) return Json(new { success = false, message = "Usuário não encontrado" });
+
+            var apontamentos = db.apontamento.Where(a => a.id_usuario == id).ToList();
+
+            db.RemoveRange(apontamentos);
+            db.Remove(user);
+            db.SaveChanges();
+
+            return Json(new { success = true, message = "Usuário deletado" });
+        }
+        catch(Exception ex)
+        {
+            return Json(new { success = false, message = util.ErrorMessage(ex) });
+        }
     }
 
 

@@ -62,12 +62,40 @@ public class ApontamentoController : Controller
         try
         {
             var usuario = util.GetIdLoggedUser(User);
-            if (usuario == 0) return Json(new { success = false, message = "Usuário não logado" });
+            if (usuario == 0)
+                return Json(new { success = false, message = "Usuário não logado" });
 
-            var apontamento = db.apontamento.Where(a => a.id_usuario == usuario).OrderByDescending(a => a.dtApontamento).Select(a => a.dtApontamento).FirstOrDefault();
+            var apontamento = db.apontamento
+                .Where(a => a.id_usuario == usuario)
+                .OrderByDescending(a => a.dtApontamento)
+                .Select(a => (DateTime?)a.dtApontamento)
+                .FirstOrDefault();
 
             return Json(new { success = true, data = apontamento });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = util.ErrorMessage(ex) });
+        }
+    }
 
+    [Authorize]
+    [HttpGet]
+    public JsonResult GetFirstApontamento()
+    {
+        try
+        {
+            var usuario = util.GetIdLoggedUser(User);
+            if (usuario == 0)
+                return Json(new { success = false, message = "Usuário não logado" });
+
+            var apontamento = db.apontamento
+                .Where(a => a.id_usuario == usuario)
+                .OrderBy(a => a.dtApontamento)
+                .Select(a => (DateTime?)a.dtApontamento)
+                .FirstOrDefault();
+
+            return Json(new { success = true, data = apontamento });
         }
         catch (Exception ex)
         {
@@ -77,7 +105,7 @@ public class ApontamentoController : Controller
 
     [HttpGet]
     [Authorize]
-    public JsonResult GetApontamentosAnteriores(int dias = 30)
+    public JsonResult GetApontamentosAnteriores(int dias = 10)
     {
         try
         {
@@ -300,6 +328,7 @@ public class ApontamentoController : Controller
         }
     }
 
+
     [Authorize]
     [HttpGet]
     public JsonResult GetStatusTrabalho()
@@ -307,7 +336,8 @@ public class ApontamentoController : Controller
         try
         {
             var usuario = util.GetIdLoggedUser(User);
-            if (usuario == 0) return Json(new { success = false, message = "Usuário não logado" });
+            if (usuario == 0)
+                return Json(new { success = false, message = "Usuário não logado" });
 
             var hoje = DateTime.Now.Date;
 
@@ -316,24 +346,53 @@ public class ApontamentoController : Controller
                 .OrderBy(a => a.dtApontamento)
                 .ToList();
 
-            if (apontamentos.Count == 0) return Json(new { success = true, message = "", horasTrabalhadas = "00:00:00", horasTurno = 8 });
+            if (apontamentos.Count == 0)
+                return Json(new { success = true, message = "", horasTrabalhadas = "00:00:00", horasTurno = 8 });
 
-            if (apontamentos.Count == 1) return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = "00:00:00", horasTurno = 8 });
-            
             TimeSpan horasTotais = TimeSpan.Zero;
-            for (int i = 0; i < apontamentos.Count; i += 2)
+
+            for (int i = 0; i + 1 < apontamentos.Count; i += 2)
             {
                 var entrada = apontamentos[i].dtApontamento;
                 var saida = apontamentos[i + 1].dtApontamento;
 
-                if (saida > entrada) horasTotais += (saida - entrada);
+                if (saida > entrada)
+                    horasTotais += (saida - entrada);
             }
 
-            if (apontamentos.Count % 2 == 1) return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = "00:00:00", horasTurno = 8 });
+            if (apontamentos.Count % 2 == 1)
+            {
+                var ultimaEntrada = apontamentos.Last().dtApontamento;
+                if (DateTime.Now > ultimaEntrada)
+                    horasTotais += (DateTime.Now - ultimaEntrada);
 
-            if (horasTotais.TotalHours >= 8) return Json(new { success = true, message = "Concluído", horasTrabalhadas = horasTotais, horasTurno = 8 });
+                return Json(new
+                {
+                    success = true,
+                    message = "Trabalhando",
+                    horasTrabalhadas = horasTotais.ToString(@"hh\:mm\:ss"),
+                    horasTurno = 8
+                });
+            }
 
-            else return Json(new { success = true, message = "Trabalhando", horasTrabalhadas = horasTotais, horasTurno = 8 });
+            if (horasTotais.TotalHours >= 8)
+            {
+                return Json(new
+                {
+                    success = true,
+                    message = "Concluído",
+                    horasTrabalhadas = horasTotais.ToString(@"hh\:mm\:ss"),
+                    horasTurno = 8
+                });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = "Intervalo/Pausa",
+                horasTrabalhadas = horasTotais.ToString(@"hh\:mm\:ss"),
+                horasTurno = 8
+            });
         }
         catch (Exception ex)
         {

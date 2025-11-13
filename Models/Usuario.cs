@@ -11,6 +11,8 @@ namespace ApontamentoHoras.Models
         public string password { get; set; }
         public string fullName { get; set; }
         public DateTime dtCreation { get; set; }
+        public bool? admin {get; set;}
+        
 
         [ForeignKey("cargo")]
         [Column("id_cargo")]

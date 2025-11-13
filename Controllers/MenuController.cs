@@ -23,7 +23,7 @@ public class MenuController : Controller
     {
         int loggedUserId = util.GetIdLoggedUser(User);
         var fullName = db.usuario.Where(a => a.id == loggedUserId).Select(a => a.fullName).FirstOrDefault();
-
+        
         @ViewBag.fullname = fullName;
         return View();
     }
@@ -49,5 +49,5 @@ public class MenuController : Controller
     // {
     //     return View();
     // }
-
+    // teste
 }

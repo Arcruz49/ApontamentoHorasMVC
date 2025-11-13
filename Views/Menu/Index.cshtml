@@ -51,8 +51,8 @@
           Último ponto registrado: <span class="font-semibold text-white ultimoPonto"></span>
         </div>
 
-        <p class="text-gray-400 text-sm mb-1">Horas faltantes</p>
-        <h3 class="text-3xl font-bold mb-2 text-white" id="tempoRestante">00:24:02</h3>
+        <p class="text-gray-400 text-sm mb-1">Horas trabalhadas</p>
+        <h3 class="text-3xl font-bold mb-2 text-white" id="tempoRestante"></h3>
         <div class="w-full bg-gray-700 rounded-full h-2 mb-3 overflow-hidden">
           <div class="bg-gradient-to-r from-violet-500 to-indigo-500 h-2 rounded-full animate-pulse" id="barraProgresso" style="width: 65%;"></div>
         </div>
@@ -91,7 +91,7 @@
           <p class="text-gray-400 text-sm">Saldo de horas</p>
           <h2 class="text-3xl font-bold text-green-400 saldoHoras"></h2>
         </div>
-        <p class="text-xs text-gray-500">Desde 11/01/2024</p>
+        <p class="text-xs text-gray-500 primeiroPonto"></p>
       </div>
 
       <div class="card p-6">
@@ -224,21 +224,26 @@
     }
 
 
-    function GetStatusTrabalho() {
+    function GetFirstApontamento() {
       $.ajax({
-          url: "/Apontamento/GetStatusTrabalho",
-        type: "GET",
+          url: "/Apontamento/GetFirstApontamento",
+          type: "GET",
           success: function (response) {
-            console.log(response)
-              if (response.success === true) {
-                $('.statusTrabalho').text(response.message);
-              } 
-              else {
-                console.log(response.message);
+              if (response.success === true && response.data) {
+                  const data = new Date(response.data);
+
+                  const dia = String(data.getDate()).padStart(2, '0');
+                  const mes = String(data.getMonth() + 1).padStart(2, '0');
+                  const ano = data.getFullYear();
+
+
+                  const dataFormatada = `${dia}/${mes}/${ano}`;
+
+                  $(".primeiroPonto").text(dataFormatada);
+                  
+              } else {
+                  $(".primeiroPonto").text("Nenhum registro encontrado");
               }
-
-              $('#tempoRestante').text(response.horasTrabalhadas); 
-
           },
           error: function (xhr, status, error) {
               notyf.error("Erro ao obter último ponto: " + error);
@@ -247,12 +252,71 @@
     }
 
 
+    let timerInterval = null;
+
+    function GetStatusTrabalho() {
+      $.ajax({
+        url: "/Apontamento/GetStatusTrabalho",
+        type: "GET",
+        success: function (response) {
+          console.log(response);
+
+          if (response.success === true) {
+            $('.statusTrabalho').text(response.message);
+
+            // Exibe o tempo inicial
+            $('#tempoRestante').text(response.horasTrabalhadas);
+
+            // Se tiver tempo maior que 00:00:00, inicia o contador
+            if (response.horasTrabalhadas !== "00:00:00" && response.message === "Trabalhando") {
+              startTimer(response.horasTrabalhadas);
+            } else {
+              stopTimer();
+            }
+          } else {
+            console.log(response.message);
+          }
+        },
+        error: function (xhr, status, error) {
+          notyf.error("Erro ao obter último ponto: " + error);
+        }
+      });
+    }
+
+    // --- Funções de controle do cronômetro ---
+    function startTimer(horas) {
+      stopTimer(); // evita duplicar o contador
+
+      let [h, m, s] = horas.split(":").map(Number);
+      let totalSeconds = h * 3600 + m * 60 + s;
+
+      timerInterval = setInterval(() => {
+        totalSeconds++;
+
+        const horas = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+        const minutos = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+        const segundos = String(totalSeconds % 60).padStart(2, "0");
+
+        $('#tempoRestante').text(`${horas}:${minutos}:${segundos}`);
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+
+
     $(document).ready(() => {
       atualizarHora();
       preencherTabela();
       getSaldoHoras();
       GetLastApontamento();
       GetStatusTrabalho();
+      GetFirstApontamento();
       setInterval(atualizarHora, 1000);
 
       // Mobile sidebar toggle
